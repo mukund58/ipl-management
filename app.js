@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { MongoClient } = require('mongodb');
-const randomString=require('randomstring')
+const randomString = require('randomstring')
 const app = express();
 const PORT = 3001;
 const mongoUrl = 'mongodb://gon:gon@localhost:27017/ims?authSource=ims';
@@ -107,6 +107,7 @@ app.get('/players', async (req, res) => {
 		console.log("Players found");
 		// Option 1: Send the entire list
 		res.send(players.map(player => ({
+			id: player._id,
 			name: player.name,
 			email: player.email,
 			phone: player.phone,
@@ -119,8 +120,34 @@ app.get('/players', async (req, res) => {
 		console.error("Error fetching players:", err);
 		res.status(500).send({ error: 'Internal Server Error' });
 	} finally {
-		await connection.close(); 
+		await connection.close();
 	}
+});
+
+app.get('/players/stats', async (req, res) => {
+	try {
+		const id = req.body.id
+		await connection.connect();
+		const db = connection.db('ims');
+		console.log("Connected to MongoDB");
+
+		const collection = db.collection('users');
+		const players = await collection.find({ "_id": id}).toArray();
+
+		if (players.length === 0) {
+			console.log("No players found");
+			return res.status(404).send({ error: 'No players found' });
+		} else {
+			console.log("Players found");
+			// Option 1: Send the entire list
+			res.json(players);
+		}
+
+	} catch (err) {
+		console.error("Error fetching players:", err);
+		res.status(500).send({ error: 'Internal Server Error' });
+	}
+	await connection.close();
 });
 
 
@@ -133,11 +160,11 @@ app.get('/teams', async (req, res) => {
 		const collection = db.collection('teams');
 		const result = collection.find().toArray();
 
-		if (result>0) {
+		if (result > 0) {
 
-		res.json(result);
+			res.json(result);
 
-		}else{
+		} else {
 
 			console.log("No players found");
 			return res.status(404).send({ error: 'No players found' });
@@ -145,9 +172,9 @@ app.get('/teams', async (req, res) => {
 	} catch (err) {
 		console.error("Error fetching Teams:", err);
 		res.status(500).send({ error: 'Internal Server Error' });
-	} 
-		await connection.close(); 
-	
+	}
+	await connection.close();
+
 });
 app.get('/roles', async (req, res) => {
 	try {
