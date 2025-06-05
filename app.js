@@ -6,7 +6,7 @@ const { MongoClient } = require('mongodb');
 const randomString=require('randomstring')
 const app = express();
 const PORT = 3001;
-const mongoUrl = 'mongodb://rok:rok@localhost:27017/ims?authSource=ims';
+const mongoUrl = 'mongodb://gon:gon@localhost:27017/ims?authSource=ims';
 const dbName = 'ims';
 
 let db;
@@ -119,10 +119,36 @@ app.get('/players', async (req, res) => {
 		console.error("Error fetching players:", err);
 		res.status(500).send({ error: 'Internal Server Error' });
 	} finally {
-		await connection.close(); // Good to keep this in finally to ensure it's always called
+		await connection.close(); 
 	}
 });
 
+
+app.get('/teams', async (req, res) => {
+	try {
+		await connection.connect();
+		const db = connection.db('ims');
+		console.log("Connected to MongoDB");
+
+		const collection = db.collection('teams');
+		const result = collection.find().toArray();
+
+		if (result>0) {
+
+		res.json(result);
+
+		}else{
+
+			console.log("No players found");
+			return res.status(404).send({ error: 'No players found' });
+		}
+	} catch (err) {
+		console.error("Error fetching Teams:", err);
+		res.status(500).send({ error: 'Internal Server Error' });
+	} 
+		await connection.close(); 
+	
+});
 app.get('/roles', async (req, res) => {
 	try {
 		const token = req.headers.token;
